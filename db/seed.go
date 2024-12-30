@@ -18,7 +18,7 @@ func main() {
 	// defer db.Close()
 
 	// MySQL connection (uncommented)
-	db, err := sql.Open("mysql", "testuser:testpassword@tcp(localhost:3306)/testdb")
+	db, err := sql.Open("mysql", "testuser:testpassword@tcp(mysql:3306)/testdb")
 	if err != nil {
 		log.Fatal(err)
 	}
