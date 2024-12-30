@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	_ "github.com/lib/pq" // Driver para PostgreSQL
-	// _ "github.com/go-sql-driver/mysql" // Driver para MySQL
+	// _ "github.com/lib/pq" // postgres driver
+	_ "github.com/go-sql-driver/mysql" // mysql driver
 	"github.com/rs/cors"
 )
 
@@ -23,18 +23,17 @@ var db *sql.DB
 func main() {
 	var err error
 	// Configuração para PostgreSQL
-	db, err = sql.Open("postgres", "host=postgres user=testuser password=testpassword dbname=testdb sslmode=disable")
-	if err != nil {
-		log.Fatalf("Erro ao conectar ao banco: %v", err)
-	}
-
-	// Configuração para MySQL (comentada)
-	// db, err = sql.Open("mysql", "testuser:testpassword@tcp(mysql:3306)/testdb")
+	// db, err = sql.Open("postgres", "host=postgres user=testuser password=testpassword dbname=testdb sslmode=disable")
 	// if err != nil {
-	//     log.Fatalf("Erro ao conectar ao banco: %v", err)
+	// 	log.Fatalf("Erro ao conectar ao banco: %v", err)
 	// }
 
-	// Configuração do middleware CORS
+	// Configuração para MySQL (comentada)
+	db, err = sql.Open("mysql", "testuser:testpassword@tcp(mysql:3306)/testdb")
+	if err != nil {
+	    log.Fatalf("Erro ao conectar ao banco: %v", err)
+	}
+
     c := cors.New(cors.Options{
         AllowedOrigins:   []string{"*"},
         AllowCredentials: true,
@@ -42,7 +41,6 @@ func main() {
         AllowedHeaders:   []string{"Content-Type", "Authorization"},
     })
 
-  	// Envolva o handler com o middleware CORS
   	handler := c.Handler(http.DefaultServeMux)
 
 	http.HandleFunc("/users", handleUsers)
