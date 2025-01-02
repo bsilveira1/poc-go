@@ -49,6 +49,8 @@ func main() {
 }
 
 func handleUsers(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Recebida requisição %s em /users", r.Method)
+
 	switch r.Method {
 	case "GET":
 		getUsers(w, r)
@@ -60,13 +62,17 @@ func handleUsers(w http.ResponseWriter, r *http.Request) {
 		deleteUser(w, r)
 	default:
 		http.Error(w, "Método não permitido", http.StatusMethodNotAllowed)
+		log.Printf("Método %s não permitido", r.Method)
 	}
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
+	log.Println("Buscando usuários no banco de dados...")
+
 	rows, err := db.Query("SELECT id, name, email FROM users")
 	if err != nil {
 		http.Error(w, "Erro ao buscar usuários", http.StatusInternalServerError)
+		log.Printf("Erro ao buscar usuários: %v", err)
 		return
 	}
 	defer rows.Close()
@@ -76,6 +82,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		var user User
 		if err := rows.Scan(&user.ID, &user.Name, &user.Email); err != nil {
 			http.Error(w, "Erro ao processar dados", http.StatusInternalServerError)
+			log.Printf("Erro ao processar dados dos usuários: %v", err)
 			return
 		}
 		users = append(users, user)
@@ -83,52 +90,69 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(users)
+
+	log.Printf("Retornando %d usuários", len(users))
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Criando um novo usuário...")
+
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Erro ao processar entrada", http.StatusBadRequest)
+		log.Printf("Erro ao decodificar corpo da requisição: %v", err)
 		return
 	}
 
 	_, err := db.Exec("INSERT INTO users (name, email) VALUES ($1, $2)", user.Name, user.Email)
 	if err != nil {
 		http.Error(w, "Erro ao criar usuário", http.StatusInternalServerError)
+		log.Printf("Erro ao inserir usuário no banco de dados: %v", err)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	log.Printf("Usuário criado com sucesso: %s", user.Name)
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Atualizando usuário...")
+
 	var user User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, "Erro ao processar entrada", http.StatusBadRequest)
+		log.Printf("Erro ao decodificar corpo da requisição: %v", err)
 		return
 	}
 
 	_, err := db.Exec("UPDATE users SET name = $1, email = $2 WHERE id = $3", user.Name, user.Email, user.ID)
 	if err != nil {
 		http.Error(w, "Erro ao atualizar usuário", http.StatusInternalServerError)
+		log.Printf("Erro ao atualizar usuário no banco de dados: %v", err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	log.Printf("Usuário atualizado com sucesso: %s", user.Name)
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
+	log.Println("Deletando usuário...")
+
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil {
 		http.Error(w, "ID inválido", http.StatusBadRequest)
+		log.Printf("ID inválido fornecido: %v", err)
 		return
 	}
 
 	_, err = db.Exec("DELETE FROM users WHERE id = $1", id)
 	if err != nil {
 		http.Error(w, "Erro ao deletar usuário", http.StatusInternalServerError)
+		log.Printf("Erro ao deletar usuário com ID %d: %v", id, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	log.Printf("Usuário com ID %d deletado com sucesso", id)
 }
