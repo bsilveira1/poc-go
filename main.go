@@ -31,17 +31,17 @@ func main() {
 	// Configuração para MySQL (comentada)
 	db, err = sql.Open("mysql", "testuser:testpassword@tcp(mysql:3306)/testdb")
 	if err != nil {
-	    log.Fatalf("Erro ao conectar ao banco: %v", err)
+		log.Fatalf("Erro ao conectar ao banco: %v", err)
 	}
 
-    c := cors.New(cors.Options{
-        AllowedOrigins:   []string{"*"},
-        AllowCredentials: true,
-        AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowedHeaders:   []string{"Content-Type", "Authorization"},
-    })
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+	})
 
-  	handler := c.Handler(http.DefaultServeMux)
+	handler := c.Handler(http.DefaultServeMux)
 
 	http.HandleFunc("/users", handleUsers)
 	log.Println("Servidor iniciado na porta 8080")
@@ -89,7 +89,11 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	if err := json.NewEncoder(w).Encode(users); err != nil {
+		http.Error(w, "Erro ao codificar resposta", http.StatusInternalServerError)
+		log.Printf("Erro ao codificar resposta em JSON: %v", err)
+		return
+	}
 
 	log.Printf("Retornando %d usuários", len(users))
 }
