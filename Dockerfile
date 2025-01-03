@@ -9,7 +9,7 @@ RUN go mod tidy
 RUN go build -o golang-app .
 
 # Run stage
-FROM golang:1.18
+FROM golang:1.23.4
 
 WORKDIR /app
 
